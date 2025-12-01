@@ -1,0 +1,34 @@
+[workspace]
+resolver = "2"
+members = [
+    "common",
+    "day_*",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["SwissBorg"]
+license = "MIT"
+
+[workspace.dependencies]
+# Shared library
+common = { path = "common" }
+
+# Error handling
+anyhow = "1.0"
+
+# Parsing & data
+csv = "1.3"
+itertools = "0.12"
+serde = { version = "1.0", features = ["derive"] }
+
+# Collections
+
+# Numeric
+num = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = true
+

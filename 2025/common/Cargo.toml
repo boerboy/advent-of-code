@@ -1,0 +1,13 @@
+[package]
+name = "common"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+csv.workspace = true
+itertools.workspace = true
+serde.workspace = true
+num.workspace = true
+

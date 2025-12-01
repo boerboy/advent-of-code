@@ -68,4 +68,8 @@ impl Coords {
         Coords::CARDINALS.iter().map(|d| self.add(*d)).collect()
     }
 
+    pub fn is_longitudinal(&self) -> bool {
+        self == &Coords::NORTH || self == &Coords::SOUTH
+    }
+
 }
