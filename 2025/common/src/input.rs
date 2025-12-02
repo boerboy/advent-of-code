@@ -1,9 +1,9 @@
 //! Input parsing utilities for Advent of Code
 
 use crate::grid::Grid;
-use anyhow::{Context, Result};
-use serde::de::DeserializeOwned;
+use anyhow::{anyhow, Context, Result};
 use std::fs;
+use std::fs::File;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -54,22 +54,24 @@ where
 }
 
 /// Read CSV file with custom delimiter
-pub fn read_csv<T, P>(path: P, delimiter: u8) -> Result<Vec<T>>
+pub fn read_csv<T>(file: &str, delimiter: u8) -> Result<Vec<T>>
 where
-    T: DeserializeOwned,
-    P: AsRef<Path>,
+    T: FromStr,
+    <T as FromStr>::Err: std::fmt::Display,
 {
-    let file = fs::File::open(path.as_ref())
-        .with_context(|| format!("Failed to open file: {:?}", path.as_ref()))?;
-    
+    let file = File::open(file)?;
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(delimiter)
         .has_headers(false)
         .from_reader(file);
 
-    rdr.deserialize()
-        .collect::<Result<Vec<T>, _>>()
-        .context("Failed to parse CSV")
+    rdr.deserialize::<String>()
+        .map(|x| {
+            let str = x?;
+            str.parse::<T>()
+                .map_err(|e| anyhow!("Failed to parse '{}': {}", str, e))
+        })
+        .collect::<Result<Vec<T>>>()
 }
 
 /// Read a single line and split by delimiter, parsing each part
@@ -95,10 +97,7 @@ where
     P: AsRef<Path>,
 {
     let lines = read_lines(path)?;
-    Ok(lines
-        .iter()
-        .filter_map(|s| s.parse().ok())
-        .collect())
+    Ok(lines.iter().filter_map(|s| s.parse().ok()).collect())
 }
 
 /// Read file and split by blank lines into groups
@@ -169,4 +168,3 @@ mod tests {
         assert_eq!(b, "second\nthird");
     }
 }
-
