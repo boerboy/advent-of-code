@@ -10,6 +10,7 @@ pub mod coords;
 pub mod grid;
 pub mod input;
 pub mod math;
+pub mod range;
 
 // Re-export commonly used types at crate root
 pub use coords::Coord;
@@ -24,5 +25,6 @@ pub mod prelude {
     pub use anyhow::{anyhow, bail, Context, Result};
     pub use itertools::Itertools;
     pub use std::collections::{HashMap, HashSet, VecDeque};
+    pub use crate::range::Range;
 }
 

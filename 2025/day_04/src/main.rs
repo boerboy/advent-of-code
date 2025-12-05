@@ -1,6 +1,6 @@
 //! Advent of Code 2025 - Day 04
 //!
-//! Puzzle: https://adventofcode.com/2025/day/3
+//! Puzzle: https://adventofcode.com/2025/day/4
 
 use anyhow::Result;
 use common::input::read_grid;
@@ -68,7 +68,7 @@ fn part2(path: &str) -> Result<i64> {
 }
 
 fn main() -> Result<()> {
-    println!("=== Advent of Code 2025 - Day 03 ===\n");
+    println!("=== Advent of Code 2025 - Day 04 ===\n");
     // Run with test input first
     println!("--- Test Input ---");
     match part1(&test_input()) {
