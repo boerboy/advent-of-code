@@ -1,3 +1,5 @@
+use std::cmp::{max, min};
+use std::ops::RangeInclusive;
 use std::str::FromStr;
 use anyhow::anyhow;
 
@@ -23,10 +25,19 @@ impl Range {
         self.start <= other.end && other.start <= self.end
     }
 
+    pub fn combine_ranges(&self, other: &Range) -> Range {
+        assert!(self.overlaps(other), "Ranges must overlap");
+        let start = min(self.start, other.start);
+        let end = max(self.end, other.end);
+        Range::new(start, end)
+    }
+
     /// Get the length of the range
     pub fn len(&self) -> i64 {
         self.end - self.start + 1
     }
+
+    pub fn range_iter(&self) -> RangeInclusive<i64> { self.start..=self.end }
 }
 
 impl FromStr for Range {

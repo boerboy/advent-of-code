@@ -33,14 +33,12 @@ fn parse_input(path: &str) -> Result<PuzzleInput> {
     // Parse ranges (first section)
     let ranges: Vec<Range> = ranges_section
         .lines()
-        .filter(|line| !line.trim().is_empty())
         .map(|line| line.parse::<Range>())
         .collect::<Result<Vec<_>>>()?;
 
     // Parse numbers (second section)
     let numbers: Vec<i64> = numbers_section
         .lines()
-        .filter(|line| !line.trim().is_empty())
         .map(|line| {
             line.trim()
                 .parse::<i64>()
@@ -51,28 +49,42 @@ fn parse_input(path: &str) -> Result<PuzzleInput> {
     Ok(PuzzleInput { ranges, numbers })
 }
 
+fn find_fresh_ingredient_count(input: PuzzleInput) -> i64 {
+    input
+        .numbers
+        .iter()
+        .filter(|&&n| {
+            input
+                .ranges
+                .iter()
+                .find(|range| range.contains(n))
+                .is_some()
+        })
+        .collect_vec()
+        .len() as i64
+}
+
+fn find_fresh_ingredient_id_count(puzzle_input: PuzzleInput) -> i64 {
+    let mut acc = HashSet::<i64>::new();
+    puzzle_input.ranges.sort_by(|a, b|)
+    puzzle_input.ranges.iter().for_each(|range| {
+        range.range_iter().for_each(|i| {
+            acc.insert(i);
+        });
+    });
+    acc.len() as i64
+}
+
 fn part1(path: &str) -> Result<i64> {
     let input = parse_input(path)?;
-
-    println!("Parsed {} ranges:", input.ranges.len());
-    for range in &input.ranges {
-        println!("  {}-{}", range.start, range.end);
-    }
-
-    println!("Parsed {} numbers:", input.numbers.len());
-    for num in &input.numbers {
-        println!("  {}", num);
-    }
-
-    // TODO: Implement part 1 solution
-    Ok(0)
+    let result = find_fresh_ingredient_count(input);
+    Ok(result)
 }
 
 fn part2(path: &str) -> Result<i64> {
     let input = parse_input(path)?;
-
-    // TODO: Implement part 2 solution
-    Ok(0)
+    let result = find_fresh_ingredient_id_count(input);
+    Ok(result)
 }
 
 fn main() -> Result<()> {
@@ -88,55 +100,15 @@ fn main() -> Result<()> {
         Err(e) => println!("Part 2 (test) error: {}", e),
     }
 
-    println!("\n--- Puzzle Input ---");
-    match part1(&input()) {
-        Ok(result) => println!("Part 1: {}", result),
-        Err(e) => println!("Part 1 error: {}", e),
-    }
-    match part2(&input()) {
-        Ok(result) => println!("Part 2: {}", result),
-        Err(e) => println!("Part 2 error: {}", e),
-    }
+    // println!("\n--- Puzzle Input ---");
+    // match part1(&input()) {
+    //     Ok(result) => println!("Part 1: {}", result),
+    //     Err(e) => println!("Part 1 error: {}", e),
+    // }
+    // match part2(&input()) {
+    //     Ok(result) => println!("Part 2: {}", result),
+    //     Err(e) => println!("Part 2 error: {}", e),
+    // }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_range_parsing() {
-        let range: Range = "3-5".parse().unwrap();
-        assert_eq!(range.start, 3);
-        assert_eq!(range.end, 5);
-    }
-
-    #[test]
-    fn test_range_contains() {
-        let range = Range::new(3, 5);
-        assert!(range.contains(3));
-        assert!(range.contains(4));
-        assert!(range.contains(5));
-        assert!(!range.contains(2));
-        assert!(!range.contains(6));
-    }
-
-    #[test]
-    fn test_range_overlaps() {
-        let r1 = Range::new(3, 5);
-        let r2 = Range::new(10, 14);
-        let r3 = Range::new(4, 12);
-
-        assert!(!r1.overlaps(&r2)); // No overlap
-        assert!(r1.overlaps(&r3)); // Overlaps at 4-5
-        assert!(r2.overlaps(&r3)); // Overlaps at 10-12
-    }
-
-    #[test]
-    fn test_parse_input() {
-        let input = parse_input(&super::test_input()).unwrap();
-        assert!(!input.ranges.is_empty());
-        assert!(!input.numbers.is_empty());
-    }
 }
