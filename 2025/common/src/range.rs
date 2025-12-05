@@ -1,10 +1,11 @@
 use std::cmp::{max, min};
 use std::ops::RangeInclusive;
 use std::str::FromStr;
-use anyhow::anyhow;
+use anyhow::{Result, anyhow};
 
 /// A range with start and end values (inclusive)
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+/// Ordered by start first, then by end
+#[derive(Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
 pub struct Range {
     pub start: i64,
     pub end: i64,
@@ -25,11 +26,14 @@ impl Range {
         self.start <= other.end && other.start <= self.end
     }
 
-    pub fn combine_ranges(&self, other: &Range) -> Range {
-        assert!(self.overlaps(other), "Ranges must overlap");
-        let start = min(self.start, other.start);
-        let end = max(self.end, other.end);
-        Range::new(start, end)
+    pub fn combine_ranges(&self, other: &Range) -> Result<Range> {
+        if self.overlaps(other) {
+            let start = min(self.start, other.start);
+            let end = max(self.end, other.end);
+            Ok(Range::new(start, end))
+        } else {
+            Err(anyhow!("Ranges must overlap"))
+        }
     }
 
     /// Get the length of the range

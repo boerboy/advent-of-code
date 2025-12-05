@@ -65,14 +65,24 @@ fn find_fresh_ingredient_count(input: PuzzleInput) -> i64 {
 }
 
 fn find_fresh_ingredient_id_count(puzzle_input: PuzzleInput) -> i64 {
-    let mut acc = HashSet::<i64>::new();
-    puzzle_input.ranges.sort_by(|a, b|)
-    puzzle_input.ranges.iter().for_each(|range| {
-        range.range_iter().for_each(|i| {
-            acc.insert(i);
-        });
+    let ordered = puzzle_input.ranges.iter().sorted().map(|x|x.clone()).collect_vec();
+    let mut acc = Vec::<Range>::new();
+    let mut acc_range_opt: Option<Range> = None;
+    ordered.iter().for_each(|range: &Range|{
+        match &acc_range_opt {
+            Some(acc_range) =>
+                match acc_range.combine_ranges(&range) {
+                    Ok(combined) => acc_range_opt = Some(combined),
+                    Err(_) => {
+                        acc.push(acc_range.clone());
+                        acc_range_opt = Some(range.clone());
+                    }
+                }
+            None => acc_range_opt = Some(range.clone())
+        }
     });
-    acc.len() as i64
+    acc.push(acc_range_opt.unwrap());
+    acc.iter().map(|range| range.len()).sum()
 }
 
 fn part1(path: &str) -> Result<i64> {
@@ -100,15 +110,15 @@ fn main() -> Result<()> {
         Err(e) => println!("Part 2 (test) error: {}", e),
     }
 
-    // println!("\n--- Puzzle Input ---");
-    // match part1(&input()) {
-    //     Ok(result) => println!("Part 1: {}", result),
-    //     Err(e) => println!("Part 1 error: {}", e),
-    // }
-    // match part2(&input()) {
-    //     Ok(result) => println!("Part 2: {}", result),
-    //     Err(e) => println!("Part 2 error: {}", e),
-    // }
+    println!("\n--- Puzzle Input ---");
+    match part1(&input()) {
+        Ok(result) => println!("Part 1: {}", result),
+        Err(e) => println!("Part 1 error: {}", e),
+    }
+    match part2(&input()) {
+        Ok(result) => println!("Part 2: {}", result),
+        Err(e) => println!("Part 2 error: {}", e),
+    }
 
     Ok(())
 }
