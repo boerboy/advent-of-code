@@ -104,6 +104,11 @@ impl<T> Grid<T> {
     pub fn rows(&self) -> impl Iterator<Item = &[T]> + '_ {
         self.cells.iter().map(|r| r.as_slice())
     }
+
+    /// Iterate over columns (returns cloned values since columns aren't contiguous)
+    pub fn columns(&self) -> impl Iterator<Item = Vec<&T>> + '_ {
+        (0..self.width).map(move |x| self.cells.iter().map(|row| &row[x]).collect())
+    }
 }
 
 impl<T: Clone> Grid<T> {
@@ -220,6 +225,12 @@ impl Grid<char> {
     /// Parse a grid from a string (each line becomes a row)
     pub fn from_str(s: &str) -> Self {
         let cells: Vec<Vec<char>> = s.lines().map(|line| line.chars().collect()).collect();
+        Self::new(cells)
+    }
+
+    /// Create a grid from a Vec of Strings (each String becomes a row)
+    pub fn from_lines(lines: Vec<String>) -> Self {
+        let cells: Vec<Vec<char>> = lines.iter().map(|line| line.chars().collect()).collect();
         Self::new(cells)
     }
 }
