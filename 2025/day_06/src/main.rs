@@ -128,17 +128,15 @@ fn part2(path: &str) -> Result<i64> {
             let numbers: Vec<i64> = Grid::from_lines(problem.clone().numbers)
                 .columns()
                 .filter_map(|col| {
-                    println!("{:?}", col);
                     col.iter()
                         .map(|c| **c)
+                        .filter(|&c| c !='*' && c !='+')
                         .collect::<String>()
                         .trim()
                         .parse::<i64>()
                         .ok()
                 })
                 .collect();
-
-            println!("{:?}", numbers);
             numbers
                 .iter()
                 .fold(0, |acc, i| get_operation(problem.operation)(acc, *i))
