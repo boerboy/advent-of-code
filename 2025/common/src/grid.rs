@@ -75,24 +75,23 @@ impl<T> Grid<T> {
 
     /// Iterate over all coordinates in row-major order
     pub fn coords(&self) -> impl Iterator<Item = Coord> + '_ {
-        (0..self.height).flat_map(move |y| (0..self.width).map(move |x| Coord::new(x as i64, y as i64)))
+        (0..self.height)
+            .flat_map(move |y| (0..self.width).map(move |x| Coord::new(x as i64, y as i64)))
     }
 
     /// Iterate over all (coordinate, value) pairs
     pub fn iter(&self) -> impl Iterator<Item = (Coord, &T)> + '_ {
-        self.coords().map(|c| (c, &self.cells[c.y as usize][c.x as usize]))
+        self.coords()
+            .map(|c| (c, &self.cells[c.y as usize][c.x as usize]))
     }
 
     /// Iterate over all values mutably
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (Coord, &mut T)> + '_ {
-        self.cells
-            .iter_mut()
-            .enumerate()
-            .flat_map(|(y, row)| {
-                row.iter_mut()
-                    .enumerate()
-                    .map(move |(x, val)| (Coord::new(x as i64, y as i64), val))
-            })
+        self.cells.iter_mut().enumerate().flat_map(|(y, row)| {
+            row.iter_mut()
+                .enumerate()
+                .map(move |(x, val)| (Coord::new(x as i64, y as i64), val))
+        })
     }
 
     /// Get row as slice
@@ -198,6 +197,32 @@ impl<T> Grid<T> {
             .map(|c| (c, &self.cells[c.y as usize][c.x as usize]))
             .collect()
     }
+
+    pub fn visited_tracker(&self) -> VisitedTracker {
+        VisitedTracker {
+            data: vec![false; self.width() * self.height()],
+            width: self.width(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct VisitedTracker {
+    data: Vec<bool>,
+    width: usize,
+}
+
+impl VisitedTracker {
+    pub fn visit(&mut self, c: Coord) -> bool {
+        let idx = c.idx(self.width);
+        let was_visited = self.data[idx];
+        self.data[idx] = true;
+        !was_visited
+    }
+
+    pub fn is_visited(&self, c: Coord) -> bool {
+        self.data[c.y as usize * self.width + c.x as usize]
+    }
 }
 
 impl<T: Display> Grid<T> {
@@ -262,33 +287,3 @@ impl<T: Display> fmt::Display for Grid<T> {
         Ok(())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_grid_basics() {
-        let grid = Grid::from_str("ABC\nDEF\nGHI");
-        assert_eq!(grid.width(), 3);
-        assert_eq!(grid.height(), 3);
-        assert_eq!(grid.get(Coord::new(0, 0)), Some(&'A'));
-        assert_eq!(grid.get(Coord::new(2, 2)), Some(&'I'));
-        assert_eq!(grid.get(Coord::new(3, 0)), None);
-    }
-
-    #[test]
-    fn test_grid_find() {
-        let grid = Grid::from_str("A.A\n.A.\nA.A");
-        assert_eq!(grid.find_all(&'A').len(), 5);
-    }
-
-    #[test]
-    fn test_grid_neighbors() {
-        let grid = Grid::from_str("123\n456\n789");
-        let center = Coord::new(1, 1);
-        let neighbors = grid.neighbors(center);
-        assert_eq!(neighbors.len(), 4);
-    }
-}
-

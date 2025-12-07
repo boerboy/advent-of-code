@@ -56,6 +56,10 @@ impl Coord {
         Self::SOUTH_WEST,
     ];
 
+    // Unique id for Coord
+    pub fn idx(&self, width: usize) -> usize {
+        self.y as usize * width + self.x as usize
+    }
     /// Get cardinal neighbors (4-connected)
     pub fn neighbors(&self) -> impl Iterator<Item = Coord> + '_ {
         Self::CARDINALS.iter().map(|d| *self + *d)
