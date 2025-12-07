@@ -200,7 +200,7 @@ impl<T> Grid<T> {
 
     pub fn visited_tracker(&self) -> VisitedTracker {
         VisitedTracker {
-            data: vec![false; self.width() * self.height()],
+            data: vec![0; self.width() * self.height()],
             width: self.width(),
         }
     }
@@ -208,20 +208,40 @@ impl<T> Grid<T> {
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct VisitedTracker {
-    data: Vec<bool>,
+    pub data: Vec<i64>,
     width: usize,
 }
 
 impl VisitedTracker {
+    pub fn new(width: usize, height: usize) -> Self {
+        Self {
+            data: vec![0; width * height],
+            width,
+        }
+    }
+
     pub fn visit(&mut self, c: Coord) -> bool {
         let idx = c.idx(self.width);
-        let was_visited = self.data[idx];
-        self.data[idx] = true;
-        !was_visited
+        let prev = self.data[idx];
+        self.data[idx] += 1;
+        prev == 0
     }
 
     pub fn is_visited(&self, c: Coord) -> bool {
+        self.data[c.y as usize * self.width + c.x as usize] >= 1
+    }
+
+    pub fn add(&mut self, c: Coord, visits: i64) {
+        let idx = c.y as usize * self.width + c.x as usize;
+        self.data[idx] += visits;
+    }
+
+    pub fn get(&self, c: Coord) -> i64 {
         self.data[c.y as usize * self.width + c.x as usize]
+    }
+
+    pub fn set(&mut self, c: Coord, visits: i64) {
+        self.data[c.y as usize * self.width + c.x as usize] = visits;
     }
 }
 

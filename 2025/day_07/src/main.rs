@@ -6,8 +6,7 @@ use anyhow::{anyhow, Result};
 use common::grid::VisitedTracker;
 use common::input::read_grid;
 use common::{Coord, Grid};
-use std::collections::HashSet;
-use common::prelude::Itertools;
+use std::collections::{HashMap, HashSet};
 
 /// Get path relative to this crate's directory
 fn resource(filename: &str) -> String {
@@ -21,62 +20,63 @@ fn test_input() -> String {
     resource("test.txt")
 }
 
-fn find_splits(grid: Grid<char>) -> Option<i64> {
-    fn rec(
-        grid: &Grid<char>,
-        current: Coord,
-        acc: &mut HashSet<Coord>,
-        visited: &mut VisitedTracker,
-    ) {
-        let next_value = current + Coord::SOUTH;
-        if !next_value.in_grid_bounds(grid) || !visited.visit(next_value) {
-            ()
+fn find_split_rec(
+    grid: &Grid<char>,
+    current: Coord,
+    acc: &mut HashSet<Coord>,
+    visited: &mut VisitedTracker,
+) {
+    let next_value = current + Coord::SOUTH;
+    if !next_value.in_grid_bounds(grid) || !visited.visit(next_value) {
+        ()
+    } else {
+        let &next_char = grid.get(next_value).unwrap();
+        if next_char == '^' {
+            acc.insert(next_value);
+            find_split_rec(grid, next_value + Coord::WEST, acc, visited);
+            find_split_rec(grid, next_value + Coord::EAST, acc, visited);
         } else {
-            let &next_char = grid.get(next_value).unwrap();
-            if next_char == '^' {
-                acc.insert(next_value);
-                rec(grid, next_value + Coord::WEST, acc, visited);
-                rec(grid, next_value + Coord::EAST, acc, visited);
-            } else {
-                rec(grid, next_value, acc, visited)
-            }
+            find_split_rec(grid, next_value, acc, visited)
         }
     }
+}
+
+fn find_splits(grid: Grid<char>) -> Option<i64> {
     let start = grid.find(&'S')?;
     let visited = &mut grid.visited_tracker();
     let acc = &mut HashSet::new();
-    rec(&grid, start, acc, visited);
+    find_split_rec(&grid, start, acc, visited);
     Some(acc.iter().len() as i64)
 }
 
+
+fn count_timelines(grid: &Grid<char>, start: Coord) -> i64 {
+    (start.y + 1..grid.height() as i64)
+        .fold(
+            HashMap::from([(start.x as usize, 1i64)]),
+            |curr, row| {
+                curr.into_iter()
+                    .flat_map(|(col, timelines)| {
+                        let below = Coord::new(col as i64, row);
+                        match grid.get(below) {
+                            Some(&'^') => vec![(col - 1, timelines), (col + 1, timelines)],
+                            _ => vec![(col, timelines)],
+                        }
+                    })
+                    .fold(HashMap::new(), |mut acc, (col, timelines)| {
+                        *acc.entry(col).or_insert(0) += timelines;
+                        acc
+                    })
+            },
+        )
+        .values()
+        .sum()
+}
+
 fn find_quantum_splits(grid: Grid<char>) -> Option<i64> {
-    fn rec(
-        grid: &Grid<char>,
-        current: Coord,
-        acc: &mut HashSet<Coord>,
-        visited: &mut VisitedTracker,
-    ) {
-        let next_value = current + Coord::SOUTH;
-        if !next_value.in_grid_bounds(grid) || !visited.visit(next_value) {
-            ()
-        } else {
-            let &next_char = grid.get(next_value).unwrap();
-            if next_char == '^' {
-                acc.insert(next_value);
-                rec(grid, next_value + Coord::WEST, acc, visited);
-                rec(grid, next_value + Coord::EAST, acc, visited);
-            } else {
-                rec(grid, next_value, acc, visited)
-            }
-        }
-    }
     let start = grid.find(&'S')?;
-    let visited = &mut grid.visited_tracker();
-    let acc = &mut HashSet::new();
-    rec(&grid, start, acc, visited);
-    println!("filtered: {:?}", grid.cells.iter().filter(|row| row.iter().filter(|c| )c == '^' && visited.is_visited(coord)).collect_vec().len());
-    println!("{:?}", visited);
-    Some(acc.iter().len() as i64)
+    let result = count_timelines(&grid, start);
+    Some(result)
 }
 
 fn part1(path: &str) -> Result<i64> {
@@ -109,14 +109,14 @@ fn main() -> Result<()> {
     }
 
     println!("\n--- Puzzle Input ---");
-    // match part1(&input()) {
-    //     Ok(result) => println!("Part 1: {}", result),
-    //     Err(e) => println!("Part 1 error: {}", e),
-    // }
-    // match part2(&input()) {
-    //     Ok(result) => println!("Part 2: {}", result),
-    //     Err(e) => println!("Part 2 error: {}", e),
-    // }
+    match part1(&input()) {
+        Ok(result) => println!("Part 1: {}", result),
+        Err(e) => println!("Part 1 error: {}", e),
+    }
+    match part2(&input()) {
+        Ok(result) => println!("Part 2: {}", result),
+        Err(e) => println!("Part 2 error: {}", e),
+    }
 
     Ok(())
 }
