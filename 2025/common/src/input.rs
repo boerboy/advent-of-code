@@ -1,11 +1,13 @@
 //! Input parsing utilities for Advent of Code
 
+use std::error::Error;
 use crate::grid::Grid;
 use anyhow::{anyhow, Context, Result};
 use std::fs;
 use std::fs::File;
 use std::path::Path;
 use std::str::FromStr;
+use serde::de::DeserializeOwned;
 
 /// Read entire file as string
 pub fn read_string<P: AsRef<Path>>(path: P) -> Result<String> {
@@ -54,24 +56,20 @@ where
 }
 
 /// Read CSV file with custom delimiter
-pub fn read_csv<T>(file: &str, delimiter: u8) -> Result<Vec<T>>
-where
-    T: FromStr,
-    <T as FromStr>::Err: std::fmt::Display,
-{
+pub fn read_csv<T>(file: &str, delimiter: u8) -> std::result::Result<Vec<T>, Box<dyn Error>>
+where T: DeserializeOwned {
     let file = File::open(file)?;
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(delimiter)
         .has_headers(false)
         .from_reader(file);
 
-    rdr.deserialize::<String>()
-        .map(|x| {
-            let str = x?;
-            str.parse::<T>()
-                .map_err(|e| anyhow!("Failed to parse '{}': {}", str, e))
-        })
-        .collect::<Result<Vec<T>>>()
+    let result = rdr
+        .deserialize()
+        .flat_map(|x| x)
+        .collect();
+
+    Ok(result)
 }
 
 /// Read a single line and split by delimiter, parsing each part
