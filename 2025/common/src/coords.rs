@@ -3,9 +3,10 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
+use serde::Deserialize;
 
 /// A 2D coordinate with signed integer components
-#[derive(Copy, Clone, Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd)]
+#[derive(Copy, Clone, Debug, Default, Eq, Hash, PartialEq, Ord, PartialOrd, Deserialize)]
 pub struct Coord {
     pub x: i64,
     pub y: i64,
@@ -146,6 +147,12 @@ impl Coord {
         } else {
             None
         }
+    }
+    pub fn rectangle_area(&self, other: &Coord) -> i64 {
+        // Adding 1 for index start == 0
+        let width = (self.x - other.x).abs() + 1;
+        let height = (self.y - other.y).abs() + 1;
+        width * height
     }
 }
 
